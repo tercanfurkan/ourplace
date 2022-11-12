@@ -7,6 +7,8 @@
 
 ## 1 Summary
 
+This is the system design document and RFC for the Ourplace chat-service.
+
 *A short paragraph or bullet list that quickly explains what you're trying to do.*
 
 ## 2 Motivation
@@ -16,6 +18,35 @@
 *Here, we aim to get comfortable articulating the value of our actions.*
 
 ## 3. Requirements
+
+- What are the goals and the feature scope of the chat-service?
+    - Do we support features other than chat related?
+- How many users are estimated to use the service?
+    - early phase?
+    - growth phase?
+- What are the anticipated scales in 3 months, 6 months and a year?
+    - what is the anticipated traffic volume?
+    - how should the system handle the next scale curve
+        - e.g. vertical scaling, rewrite, auto-scaling, something in between?
+- What is the current tech stack know-how? 
+- Can we leverage the existing know-how to build some of the system components?
+- What kind of UIs?
+    - web?
+    - mobile?
+- Do we support images, audio, video messaging besides text?
+- For how long shoud we store messages?
+- How many chat rooms (places) can a user belong to?
+- How to reduce latency? Make the messaging as fast as possible.
+- How to manage online/offline status?
+- How should the system respond to error cases?
+    - server failures
+    - network losses
+    - deviance in network latency
+    - network partitionings
+    - data center outage
+- What is important to measure?
+- How should we roll out the service?
+- Do we need a staging environment besides production?
 
 *AKA success criteria. Briefly (one or two sentences) state your solution, and then talk about all the good stuff stakeholders will get once the proposal is implemented - impact of the solution. This section is a counterpart to the Motivation section and the same guidelines apply.
 
@@ -46,7 +77,7 @@
     - systems that store data in memory
     - to decouple system components and scale independently
     - add asyncronous nature to the data flow
-    - think of web servers as producers and "workers" as consumers 
+    - think of web servers as producers and "workers" as consumers
         - what could a worker do in our scenario?
     - consider using Redis for 3 purposes; message queue, caching system and shared data storage.
 
@@ -76,6 +107,14 @@
     - ci
         - build, test and merge
     - deploy
+
+
+
+DATA
+
+    - should we compress data?
+        - when? before sending, before storing?
+    - compress data?
 
 *This is the core of your proposal, and its purpose is to help you think through the problem because [writing is thinking](https://medium.learningbyshipping.com/writing-is-thinking-an-annotated-twitter-thread-2a75fe07fade).*
 
