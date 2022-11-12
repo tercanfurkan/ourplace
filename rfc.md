@@ -7,17 +7,90 @@
 
 ## 1 Summary
 
-This is the system design document and RFC for the Ourplace chat-service.
-
-*A short paragraph or bullet list that quickly explains what you're trying to do.*
+This is the RFC document of the Ourplace chat-service system design proposal
 
 ## 2 Motivation
 
-*What motivates this proposal, and why is it important?*
-
-*Here, we aim to get comfortable articulating the value of our actions.*
-
 ## 3. Requirements
+
+### Functional requirements
+
+- The chat-service should support group chat in the beginning
+- It can support 1-on-1 chat in a later stage
+- The service should be centered around a mobile app
+- It should also have a web app
+- Most important features are:
+    - group chat
+    - support only text messages in the beginning 
+    - audio, standard & animated emojis, images and polls can be added later
+- Indicating online presence is not business critical. Can be considered later
+- It should limit a user to login on a single mobile device and web client at the same time. Similar to Whatsapp
+- It should push notifications to users.
+- User can send and delete a message she has formed
+- User add add new chat rooms (called as "places" from now onwards)
+- User can remove a place she owns if no other user is inside
+- User can invite people to a place
+- User can enter and exit a place
+- User can receive messages from her places
+- User can receive notifications from her places
+- User can mute/unmute notifications from a place
+- System only supports public places in the beginning
+- Ssystem can support private places in a later stage
+- A user can belong up to 100 (places)
+- Text message size can be limited to 500 characters
+- Media message size can be limited to 5MB
+- Chat history should be saved for 3 months
+- Chat history can be stored forever in a later stage
+- Message transfer can be unencrypted in the beginning
+- End-to-end encyrption can be added later
+- It should be a startup company app (no high-pressure in the beginning):
+    - few simple features
+    - simple UI
+    - It should support 10K daily active users (DAU) in the beginning.
+    - When it needs to scale to 1M DAU, it should be elastic enough to horizontally scale with few modifications and not with many rewrites
+    - It should aim to auto-scale in the long run
+
+### Non-functional requirements
+
+- It should have low delivery latency 
+- System data should be durable and accurate
+    - real-time messages should not get lost
+    - messages should be accurate
+        - correct content, user, date, time, order
+        - no duplicates
+    - message history should persist for at least 3 months
+    - global chat roomms (places) and users' chat rooms (places) should persist until they are deleted
+- The system should avoid single point of failure from the beginning
+- It should respond reasonbly and handle failover in cases like:
+    - server failure
+    - network loss
+    - deviance in network latency
+    - network partitioning
+    - data center outage
+    - third-party push notification service failure
+- It should benefit from tools to easily aggregate, search and view system logs
+- It should be possible to collect system health metrics in an early stage such as:
+    - host level cpu, memory, disk i/o usage
+    - aggregated metrics on DB and caching performance
+    - queued messages to be pushed/published
+- It should be possible to collect business metrics in a later stage related to:
+    - active users
+    - message counts
+    - user retention
+    - revenue
+- It should be easily and repeatedly deployable to the cloud
+- It should have test and prod environments
+- It should have automated tooling ready in an early stage for:
+    - CI; build, test and merge
+    - deploy
+- The system needs to minimize costs in the beginning:
+    - hardware costs
+    - operational support costs
+- The significance of the aggregated cost can go down in later stages
+- Cost/DAU ratio is always significant
+- Due to low resources, it should benefit from "[boring technologies](https://boringtechnology.club/)" and few technologies (try to reuse existing tech to solve multiple problems)
+
+### Some questions to thing about system requirements
 
 - What are the goals and the feature scope of the chat-service?
     - Do we support features other than chat related?
@@ -48,15 +121,10 @@ This is the system design document and RFC for the Ourplace chat-service.
 - How should we roll out the service?
 - Do we need a staging environment besides production?
 
-*AKA success criteria. Briefly (one or two sentences) state your solution, and then talk about all the good stuff stakeholders will get once the proposal is implemented - impact of the solution. This section is a counterpart to the Motivation section and the same guidelines apply.
-
-*The requirements should make it very clear when the your goal has been achieved.
-
-**Bad: “We’ll make the /do-something endpoint much faster”
-**Good: “We’ll achieve a < 100ms response time (99th) for the /do-something endpoint”
-
-*Talk about the things your proposal won’t do. This will prevent scope creep.
-
+DATA
+    - should we compress data?
+        - when? before sending, before storing?
+    - compress data?
 
 ## 4 Proposed Implementation
 
@@ -79,6 +147,7 @@ This is the system design document and RFC for the Ourplace chat-service.
     - add asyncronous nature to the data flow
     - think of web servers as producers and "workers" as consumers
         - what could a worker do in our scenario?
+            workers can pull messages from the queue send it to third-party services (APNs and FCM). Third-party services can then send messages as push notification to user (IOS and Android) devices.
     - consider using Redis for 3 purposes; message queue, caching system and shared data storage.
 
 - caching frequently access data
@@ -109,47 +178,17 @@ This is the system design document and RFC for the Ourplace chat-service.
     - deploy
 
 
-
-DATA
-
-    - should we compress data?
-        - when? before sending, before storing?
-    - compress data?
-
-*This is the core of your proposal, and its purpose is to help you think through the problem because [writing is thinking](https://medium.learningbyshipping.com/writing-is-thinking-an-annotated-twitter-thread-2a75fe07fade).*
-
-*Consider:*
-
-- *using diagrams to help illustrate your ideas.*
-- *including code examples if you're proposing an interface or system contract.*
-- *linking to project briefs or wireframes that are relevant.*
-
 ## 5 Metrics & Dashboards
-
-*What are the main metrics we should be measuring? For example, when interacting with an external system, it might be the external system latency. When adding a new table, how fast would it fill up?*
 
 ## 6 Drawbacks
 
-*Are there any reasons why we should not do this? Here we aim to evaluate risk and check ourselves.*
-
 ## 7 Alternatives
-
-*What are other ways of achieving the same outcome?*
 
 ## 8 Potential Impact and Dependencies
 
-*Here, we aim to be mindful of our environment and generate empathy towards others who may be impacted by our decisions.*
-
-- *What other systems or teams are affected by this proposal?*
-- *How could this be exploited by malicious attackers?*
-
 ## 9 Unresolved questions
 
-*What parts of the proposal are still being defined or not covered by this proposal?*
-
 ## 10 Conclusion
-
-*Here, we briefly outline why this is the right decision to make at this time and move forward!*
 
 ## 11 RFC Process Guide, remove this section when done
 
