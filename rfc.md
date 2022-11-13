@@ -21,8 +21,9 @@ This is the RFC document of the Ourplace chat-service system design proposal
 - It should also have a web app
 - Most important features are:
     - group chat
-    - support only text messages in the beginning 
-    - audio, standard & animated emojis, images and polls can be added later
+    - support only text messages in the beginning
+    - support for standard & animated emojis, polls and events can be added later
+    - support for audio messages and audio group calls can be added much later
 - Indicating online presence is not business critical. Can be considered later
 - It should limit a user to login on a single mobile device and web client at the same time. Similar to Whatsapp
 - It should push notifications to users.
@@ -36,6 +37,9 @@ This is the RFC document of the Ourplace chat-service system design proposal
 - User can mute/unmute notifications from a place
 - System only supports public places in the beginning
 - Ssystem can support private places in a later stage
+
+### Functional limits
+
 - A user can belong up to 100 (places)
 - Text message size can be limited to 500 characters
 - Media message size can be limited to 5MB
@@ -90,7 +94,7 @@ This is the RFC document of the Ourplace chat-service system design proposal
 - Cost/DAU ratio is always significant
 - Due to low resources, it should benefit from "[boring technologies](https://boringtechnology.club/)" and few technologies (try to reuse existing tech to solve multiple problems)
 
-### Some questions to thing about system requirements
+### Some questions to answer in terms of system requirements
 
 - What are the goals and the feature scope of the chat-service?
     - Do we support features other than chat related?
@@ -120,11 +124,9 @@ This is the RFC document of the Ourplace chat-service system design proposal
 - What is important to measure?
 - How should we roll out the service?
 - Do we need a staging environment besides production?
-
-DATA
+- What about data
     - should we compress data?
         - when? before sending, before storing?
-    - compress data?
 
 ## 4 Proposed Implementation
 
