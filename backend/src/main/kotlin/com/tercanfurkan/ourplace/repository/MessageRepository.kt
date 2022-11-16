@@ -11,9 +11,9 @@ interface MessageRepository : CoroutineCrudRepository<Message, String> {
     @Query("""
         SELECT * FROM (
             SELECT * FROM MESSAGES
-            ORDER BY "SENT_AT" DESC
+            ORDER BY "SENT" DESC
             LIMIT 10
-        ) ORDER BY "SENT_AT"
+        ) ORDER BY "SENT"
     """)
     fun findRecent(): Flow<Message>
 }

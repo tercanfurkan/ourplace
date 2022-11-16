@@ -8,9 +8,9 @@ import java.time.Instant
 data class Message(
     val content: String,
     val contentType: ContentType,
-    val sentAt: Instant,
+    val sent: Instant,
     val username: String,
-    val userAvatarLink: String,
+    val userAvatarImageLink: String,
     @Id var id: String? = null)
 
 enum class ContentType {

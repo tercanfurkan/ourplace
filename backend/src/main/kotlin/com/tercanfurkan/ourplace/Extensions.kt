@@ -11,16 +11,16 @@ import java.net.URL
 fun MessageViewModel.asModel(contentType: ContentType = ContentType.PLAIN): Message = Message(
     content,
     contentType,
-    sentAt,
+    sent,
     user.name,
-    user.avatarURL.toString(),
+    user.avatarImageLink.toString(),
     id
 )
 
 fun Message.asViewModel(): MessageViewModel = MessageViewModel(
     content,
-    UserViewModel(username, URL(userAvatarLink)),
-    sentAt,
+    UserViewModel(username, URL(userAvatarImageLink)),
+    sent,
     id
 )
 
