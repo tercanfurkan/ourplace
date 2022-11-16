@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="sendMessage">
-    <input v-model="newMessage">
+    <textarea v-model="newMessage"></textarea>
     <button>Send</button>
   </form>
   <ul>
@@ -20,7 +20,7 @@ import {
 }  from "rsocket-core";
 import rSocketWebSocketClient from "rsocket-websocket-client";
 import { Flowable } from "rsocket-flowable";
-
+import axios from "axios"
 import MessageComponent from '@/MessageComponent.vue'
 
 
@@ -34,10 +34,7 @@ export default {
       rsocketFlowableSource: null,
       messages: [],
       newMessage: '',
-      user: {
-        name: "Leonardo Ibarra",
-        avatarImageLink: "https://randomuser.me/api/portraits/men/24.jpg",
-      }
+      user: {}
     }
   },
 
@@ -47,6 +44,16 @@ export default {
 
   created() {
     this.openSurveyResponseStream()
+  },
+
+  mounted() {
+    axios.get("https://randomuser.me/api/").then((response) => {
+      console.log("get user data: ", response)
+      this.user = {
+        name: response.data.results[0].name.first + " " + response.data.results[0].name.last,
+        avatarImageLink: response.data.results[0].picture.large
+      }
+    })
   },
 
   methods: {

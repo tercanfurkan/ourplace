@@ -2,9 +2,6 @@
   <li class="media">
     <div class="media-body">
       <div class="media">
-        <a class="pull-left" href="#">
-        <img class="media-object img-circle" :src="avatarImageLink"/>
-        </a>
         <div class="media-body">
         {{ content }}
         <br/>
@@ -16,7 +13,7 @@
   </li>
 </template>
 <script>
-import moment from 'moment'
+  import moment from 'moment'
 
   export default {
     data: function() {
