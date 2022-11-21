@@ -7,7 +7,7 @@
 
         <div class="bg-white py-10 px-6 shadow rounded-lg sm:px-10 h-100">
             <div
-                id="chatBox"
+                ref="chatBox"
                 class="flex flex-col items-stretch overflow-auto h-full scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch"
             >
                 <div class="chat-message mt-2" v-for="message in messages" :key="message">
@@ -22,10 +22,10 @@
                                     class="px-4 py-2 rounded-lg inline-block rounded-bl-none bg-gray-300 text-gray-600"
                                 >{{ message.content }}</span>
                             </div>
-                            <small>{{ message.user.name }}</small>
+                            <small>{{ message.user.name }}  | {{ formatDate(message.sent) }}</small>
                         </div>
                         <img
-                            src="https://images.unsplash.com/photo-1549078642-b2ba4bda0cdb?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=3&amp;w=144&amp;h=144"
+                            :src="message.user.avatarImageLink"
                             alt="My profile"
                             class="w-6 h-6 rounded-full order-1"
                         />
@@ -39,7 +39,7 @@
                 <input
                     type="text"
                     :class="'w-full my-8 py-2 px-4 border border-transparent rounded-md shadow-sm focus:outline-blue-300 focus:shadow-outline '"
-                    placeholder="Please insert a message"
+                    placeholder="Type your message here..."
                     v-model="newMessage"
                 />
 
@@ -64,6 +64,7 @@ import {
 import rSocketWebSocketClient from "rsocket-websocket-client";
 import { Flowable } from "rsocket-flowable";
 import axios from "axios"
+import moment from "moment"
 
 
 var rsocketFlowableSource
@@ -88,20 +89,24 @@ export default {
       console.log("get user data: ", response)
       this.currentUser = {
         name: response.data.results[0].name.first + " " + response.data.results[0].name.last,
-        avatarImageLink: response.data.results[0].picture.large
+        avatarImageLink: response.data.results[0].picture.thumbnail
       }
     })
   },
 
   methods: {
+    formatDate(date) {
+    console.log("format date:", date)
+    return moment(date).format("DD-MM-YY, HH:mm")
+    },
 
     sendMessage() {
-        console.log("send message is called")
       var content = this.newMessage
+      var data = {content: content , user: this.currentUser, sent: new Date().toISOString()}
       this.newMessage = ''
       if (content) {
           rsocketFlowableSource.onNext({
-              data: Buffer.from(JSON.stringify({content: content , user: this.currentUser, sent: new Date().toISOString()})),
+              data: Buffer.from(JSON.stringify(data)),
               metadata: encodeAndAddWellKnownMetadata(
                   Buffer.alloc(0),
                   MESSAGE_RSOCKET_ROUTING,
@@ -113,7 +118,6 @@ export default {
 
     // RSOCKET
     openSurveyResponseStream() {
-        console.log("Open connection")
       const client = new RSocketClient({
         transport: new rSocketWebSocketClient(
             {
@@ -164,6 +168,10 @@ export default {
                         var v = JSON.parse(e.data);
                         console.log("onNextMessage: ", v)
                         this.messages.push(v)
+                        setTimeout(() => {
+                            var container = this.$refs.chatBox
+                            container.scrollTop = container.scrollHeight  
+                        }, 100) 
                     }
                 });
         });
