@@ -1,4 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
+import './assets/tailwind.css'
+import 'windi.css'
 
 createApp(App).mount('#app')
