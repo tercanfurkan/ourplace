@@ -1,8 +1,8 @@
 <template>
     <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-300">
         <div class="flex justify-evenly mb-4">
-            <h1 class="font-bold text-2xl">Users: 2</h1>
-            <h1 class="font-bold text-2xl">Place: Vehka Center</h1>
+            <h1 class="font-bold text-2xl"></h1>
+            <h1 class="font-bold text-2xl"></h1>
         </div>
 
         <div class="bg-white py-10 px-6 shadow rounded-lg sm:px-10 h-100">
