@@ -1,13 +1,18 @@
-package com.tercanfurkan.ourplace
+package com.tercanfurkan.ourplace.integration
 
 import app.cash.turbine.test
+import com.tercanfurkan.ourplace.copyForTesting
 import com.tercanfurkan.ourplace.repository.ContentType
 import com.tercanfurkan.ourplace.repository.Message
 import com.tercanfurkan.ourplace.repository.MessageRepository
 import com.tercanfurkan.ourplace.service.MessageViewModel
 import com.tercanfurkan.ourplace.service.UserViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -17,11 +22,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.messaging.rsocket.RSocketRequester
+import org.springframework.messaging.rsocket.dataWithType
 import org.springframework.messaging.rsocket.retrieveFlow
 import java.net.URI
 import java.net.URL
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import kotlin.time.ExperimentalTime
+import kotlin.time.seconds
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -29,7 +37,7 @@ import kotlin.time.ExperimentalTime
         "spring.r2dbc.url=r2dbc:h2:mem:///testdb;USER=user;PASSWORD=password"
     ]
 )
-class OurplaceAppTests(
+class MessagingTests(
     @Autowired val rsocketBuilder: RSocketRequester.Builder,
     @Autowired val messageRepository: MessageRepository,
     @LocalServerPort val port: Int
@@ -56,7 +64,7 @@ class OurplaceAppTests(
     @ExperimentalTime
     @ExperimentalCoroutinesApi
     @Test
-    fun `test that messages API streams recent messages`() {
+    fun `test that it streams recent messages`() {
         runBlocking {
             val rSocketRequester = rsocketBuilder.websocket(URI("ws://localhost:${port}/rsocket"))
 
@@ -93,6 +101,92 @@ class OurplaceAppTests(
                     expectNoEvents()
 
                     cancelAndIgnoreRemainingEvents()
+                }
+        }
+    }
+
+    @ExperimentalTime
+    @ExperimentalCoroutinesApi
+    @Test
+    fun `test that it streams new messages`() {
+        runBlocking {
+            val rSocketRequester = rsocketBuilder.websocket(URI("ws://localhost:${port}/rsocket"))
+
+            rSocketRequester
+                .route("api.v1.messages.stream")
+                .retrieveFlow<MessageViewModel>()
+                .test {
+                    repeat(3) {
+                        expectEvent()
+                    }
+                    expectNoEvents()
+
+                    launch {
+                        rSocketRequester.route("api.v1.messages.stream")
+                            .dataWithType(flow {
+                                emit(
+                                    MessageViewModel(
+                                        "newMessage",
+                                        UserViewModel("newUser", URL("http://link.com")),
+                                        now.plusSeconds(1)
+                                    )
+                                )
+                            })
+                            .retrieveFlow<Void>()
+                            .collect()
+                    }
+
+                    assertThat(expectItem().copyForTesting())
+                        .isEqualTo(
+                            MessageViewModel(
+                                "newMessage",
+                                UserViewModel("newUser", URL("http://link.com")),
+                                now.plusSeconds(1)
+                            )
+                        )
+
+                    cancelAndIgnoreRemainingEvents()
+                }
+        }
+    }
+
+    @ExperimentalTime
+    @ExperimentalCoroutinesApi
+    @Test
+    fun `test that it stores streamed messages`() {
+        runBlocking {
+            launch {
+                val rSocketRequester = rsocketBuilder.websocket(URI("ws://localhost:${port}/rsocket"))
+
+                rSocketRequester.route("api.v1.messages.stream")
+                    .dataWithType(flow {
+                        emit(
+                            MessageViewModel(
+                                "newMessage",
+                                UserViewModel("newUser", URL("http://link.com")),
+                                now.plusSeconds(1)
+                            )
+                        )
+                    })
+                    .retrieveFlow<Void>()
+                    .collect()
+            }
+
+            delay(2.seconds)
+
+            messageRepository.findAll()
+                .first { it.content.contains("newMessage") }
+                .apply {
+                    assertThat(this.copyForTesting())
+                        .isEqualTo(
+                            Message(
+                                "newMessage",
+                                ContentType.PLAIN,
+                                now.plusSeconds(1),
+                                "newUser",
+                                "http://link.com"
+                            )
+                        )
                 }
         }
     }
