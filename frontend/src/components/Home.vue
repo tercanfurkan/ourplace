@@ -6,8 +6,8 @@
 </template>
 
 <script>
-import headerVue from '../components/header.vue';
-import chatVue from '../components/chat.vue';
+import headerVue from './Header.vue'
+import chatVue from './Chat.vue';
 
 export default {
   components: {
