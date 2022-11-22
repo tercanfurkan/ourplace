@@ -6,7 +6,8 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
-    "lint": "vue-cli-service lint"
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore --fix src",
+    "format": "prettier .  --write"
   },
   "dependencies": {
     "autoprefixer": "^10",
@@ -28,8 +29,10 @@
     "@vue/vue3-jest": "^27.0.0-alpha.1",
     "babel-jest": "^27.0.6",
     "eslint": "^7.32.0",
-    "eslint-plugin-vue": "^8.0.3",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-vue": "^8.7.1",
     "jest": "^27.0.5",
+    "prettier": "2.7.1",
     "rsocket-core": "0.0.25",
     "rsocket-flowable": "0.0.25",
     "rsocket-websocket-client": "0.0.25",
