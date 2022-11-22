@@ -81,12 +81,11 @@ export default {
   },
 
   created() {
-    this.openSurveyResponseStream()
+    this.openMessagingStream()
   },
 
   mounted() {
     axios.get("https://randomuser.me/api/").then((response) => {
-      console.log("get user data: ", response)
       this.currentUser = {
         name: response.data.results[0].name.first + " " + response.data.results[0].name.last,
         avatarImageLink: response.data.results[0].picture.thumbnail
@@ -96,7 +95,6 @@ export default {
 
   methods: {
     formatDate(date) {
-    console.log("format date:", date)
     return moment(date).format("DD-MM-YY, HH:mm")
     },
 
@@ -117,63 +115,53 @@ export default {
     },
 
     // RSOCKET
-    openSurveyResponseStream() {
-      const client = new RSocketClient({
-        transport: new rSocketWebSocketClient(
-            {
-                url: 'ws://localhost:8080/rsocket',
+    async openMessagingStream() {
+        const client = new RSocketClient({
+            transport: new rSocketWebSocketClient(
+                {
+                    url: 'ws://localhost:8080/rsocket',
+                },
+                BufferEncoders,
+            ),
+            setup: {
+                dataMimeType: 'application/json',
+                metadataMimeType: MESSAGE_RSOCKET_COMPOSITE_METADATA.string,
+                keepAlive: 5000,
+                lifetime: 60000,
             },
-            BufferEncoders,
-        ),
-        setup: {
-            dataMimeType: 'application/json',
-            metadataMimeType: MESSAGE_RSOCKET_COMPOSITE_METADATA.string,
-            keepAlive: 5000,
-            lifetime: 60000,
-        },
     });
 
-      client.connect()
-        .then(rsocket => {
-            var endpoint = "api.v1.messages.stream";
+        const rsocket = await client.connect()
+        const maxNumberOfPayloadsToHandle = 1000
+        rsocket.requestChannel(new Flowable(source => {
+            source.onSubscribe()
+            rsocketFlowableSource = source
+        }))
+        .subscribe({
+            onSubscribe: (subscription) => {
+                subscription.request(maxNumberOfPayloadsToHandle)
+            }
+        });
 
-            rsocket.requestChannel(new Flowable(source => {
-                console.log("channel")
-                source.onSubscribe({
-                    cancel: () => {},
-                    request: (n) => {
-                      console.log("source.OnSubscribe request:", n)
-                    }
-                })
-                rsocketFlowableSource = source
-            }))
-                .subscribe({
-                    onSubscribe: (s) => {
-                        s.request(1000)
-                    }
-                });
-
-            rsocket.requestStream({
-                metadata: encodeAndAddWellKnownMetadata(
-                    Buffer.alloc(0),
-                    MESSAGE_RSOCKET_ROUTING,
-                    Buffer.from(String.fromCharCode(endpoint.length) + endpoint)
-                )
-            })
-                .subscribe({
-                    onSubscribe: (s) => {
-                        s.request(1000)
-                    },
-                    onNext: (e) => {
-                        var v = JSON.parse(e.data);
-                        console.log("onNextMessage: ", v)
-                        this.messages.push(v)
-                        setTimeout(() => {
-                            var container = this.$refs.chatBox
-                            container.scrollTop = container.scrollHeight  
-                        }, 100) 
-                    }
-                });
+        rsocket.requestStream({
+            metadata: encodeAndAddWellKnownMetadata(
+                Buffer.alloc(0),
+                MESSAGE_RSOCKET_ROUTING,
+                Buffer.from(String.fromCharCode(endpoint.length) + endpoint)
+            )
+        })
+        .subscribe({
+            onSubscribe: (subscription) => {
+                subscription.request(maxNumberOfPayloadsToHandle)
+            },
+            onNext: (event) => {
+                var v = JSON.parse(event.data);
+                this.messages.push(v)
+                setTimeout(() => {
+                    var container = this.$refs.chatBox
+                    container.scrollTop = container.scrollHeight  
+                }, 100) 
+            }
         });
     },
   }
